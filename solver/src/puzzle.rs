@@ -38,3 +38,20 @@ pub fn create_puzzle() -> [[i32; 9]; 9] {
     puzzle
 
 }
+
+pub fn print_puzzle(puzzle: [[i32; 9]; 9]) {
+    println!("------------------------------");
+    for i in 0..9 {
+        for j in 0..9 {
+            print!(" {} ", puzzle[i][j]);
+
+            if (j + 1) % 3 == 0 {
+                print!("|");
+            }
+        }
+        println!();
+        if (i + 1) % 3 == 0 {
+            println!("------------------------------");
+        }
+    }
+}
