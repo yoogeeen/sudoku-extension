@@ -42,6 +42,7 @@ pub fn create_puzzle() -> [[i32; 9]; 9] {
 pub fn print_puzzle(puzzle: [[i32; 9]; 9]) {
     println!("------------------------------");
     for i in 0..9 {
+        print!("|");
         for j in 0..9 {
             print!(" {} ", puzzle[i][j]);
 
