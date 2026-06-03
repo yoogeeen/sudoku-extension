@@ -102,8 +102,9 @@ pub fn single_candidates(sudoku: &mut Sudoku) -> i32 {
             let col = sudoku.cells[cell_idx].col;
             let changed = update_sudoku(&mut sudoku.cells, row, col);
             update_squares(&mut sudoku.squares, &sudoku.cells, &changed);
+            return 1;
         }
     }
 
-    1
+    0
 }

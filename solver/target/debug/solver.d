@@ -1,1 +1,1 @@
-/root/sudoku/solver/target/debug/solver: /root/sudoku/solver/src/main.rs /root/sudoku/solver/src/puzzle.rs
+/root/sudoku/solver/target/debug/solver: /root/sudoku/solver/src/main.rs /root/sudoku/solver/src/models/cell.rs /root/sudoku/solver/src/models/mod.rs /root/sudoku/solver/src/models/square.rs /root/sudoku/solver/src/models/sudoku.rs /root/sudoku/solver/src/puzzle.rs

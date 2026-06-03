@@ -153,10 +153,9 @@ pub fn check_puzzle(sudoku: &mut Sudoku) -> i32 {
             let col = sudoku.cells[idx].col;
             let changed = update_sudoku(&mut sudoku.cells, row, col);
             update_squares(&mut sudoku.squares, &sudoku.cells, &changed);
+            return 1;
         }
     }
 
-    single_candidates(sudoku);
-
-    1
+    single_candidates(sudoku)
 }

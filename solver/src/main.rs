@@ -1,4 +1,4 @@
-use std::sync::atomic::{AtomicUsize};
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use crate::puzzle::{check_puzzle, setup_puzzle};
 
@@ -19,11 +19,13 @@ fn main() {
     println!("Original");
     puzzle::print_puzzle(&sudoku.cells);
 
-    check_puzzle(&mut sudoku);
-    check_puzzle(&mut sudoku);
-    check_puzzle(&mut sudoku);
-    check_puzzle(&mut sudoku);
-    check_puzzle(&mut sudoku);
+    while UNSOLVED.load(Ordering::Relaxed) > 0 {
+        let progress = check_puzzle(&mut sudoku);
+        if progress == 0 {
+            println!("Failed to solve");
+            break;
+        }
+    }
 
     println!("Finished");
     puzzle::print_puzzle(&sudoku.cells);
