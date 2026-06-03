@@ -14,11 +14,17 @@ static UNSOLVED: AtomicUsize = AtomicUsize::new(81);
 fn main() {
     let puzzle = puzzle::create_puzzle();
 
-    let (mut sudoku, mut squares) = setup_puzzle(puzzle);
+    let mut sudoku = setup_puzzle(puzzle);
 
-    puzzle::print_puzzle(&sudoku);
+    println!("Original");
+    puzzle::print_puzzle(&sudoku.cells);
 
-    check_puzzle(&mut sudoku, &mut squares);
+    check_puzzle(&mut sudoku);
+    check_puzzle(&mut sudoku);
+    check_puzzle(&mut sudoku);
+    check_puzzle(&mut sudoku);
+    check_puzzle(&mut sudoku);
 
-    puzzle::print_puzzle(&sudoku);
+    println!("Finished");
+    puzzle::print_puzzle(&sudoku.cells);
 }
