@@ -1,5 +1,10 @@
-use crate::{SIZE_ROWS_COLS, SQUARE_ROW_COL, TOTAL_CELLS, models::Cell, models::solve_cell};
-
+use crate::{
+    SIZE_ROWS_COLS,
+    SQUARE_ROW_COL,
+    TOTAL_CELLS,
+    models::{Cell, solve_cell},
+    models::square::{Square, create_squares, populate_squares, update_squares},
+};
 pub fn create_puzzle() -> [[i32; SIZE_ROWS_COLS]; SIZE_ROWS_COLS] {
     let mut puzzle: [[i32; SIZE_ROWS_COLS]; SIZE_ROWS_COLS] = [[0; SIZE_ROWS_COLS]; SIZE_ROWS_COLS];
     for &(row, col, val) in &[
@@ -50,7 +55,7 @@ pub fn print_puzzle(sudoku: &Vec<Cell>) {
     }
 }
 
-pub fn setup_puzzle(puzzle: [[i32; SIZE_ROWS_COLS]; SIZE_ROWS_COLS]) -> Vec<Cell> {
+pub fn setup_puzzle(puzzle: [[i32; SIZE_ROWS_COLS]; SIZE_ROWS_COLS]) -> (Vec<Cell>, Vec<Square>) {
     let mut cells = Vec::with_capacity(TOTAL_CELLS);
 
     for i in 0..SIZE_ROWS_COLS {
@@ -72,21 +77,25 @@ pub fn setup_puzzle(puzzle: [[i32; SIZE_ROWS_COLS]; SIZE_ROWS_COLS]) -> Vec<Cell
         }
     }
 
+    let mut squares = create_squares();
+    populate_squares(&mut squares, &cells);
+
     for idx in 0..cells.len() {
         if cells[idx].val != 0 {
             let row = cells[idx].row;
             let col = cells[idx].col;
-            update_sudoku(&mut cells, row, col)
+            let changed = update_sudoku(&mut cells, row, col);
+            update_squares(&mut squares, &cells, &changed);
         }
     }
 
-    cells
+    (cells, squares)
 }
 
-pub fn update_sudoku(sudoku: &mut Vec<Cell>, row: usize, col: usize) {
+pub fn update_sudoku(sudoku: &mut Vec<Cell>, row: usize, col: usize) -> Vec<usize> {
     let idx = row * SIZE_ROWS_COLS + col;
     let number = sudoku[idx].val as usize;
-    if number == 0 || number > SIZE_ROWS_COLS { return; }
+    if number == 0 || number > SIZE_ROWS_COLS { return Vec::new(); }
 
     // seen vec to prevent double checking
     let mut seen = vec![false; TOTAL_CELLS];
@@ -115,24 +124,30 @@ pub fn update_sudoku(sudoku: &mut Vec<Cell>, row: usize, col: usize) {
 
     // actual update
     let slot = number - 1;
+    let mut changed = Vec::new();
     for p in 0..TOTAL_CELLS {
         if seen[p] && sudoku[p].possible[slot] == 1 {
             sudoku[p].possible[slot] = 0;
             sudoku[p].solvable -= 1;
+            changed.push(p);
         }
     }
+    changed
 }
 
-pub fn check_puzzle(sudoku: &mut Vec<Cell>) -> i32 {
-    let len = sudoku.len();
+pub fn check_puzzle(cells: &mut Vec<Cell>, mut squares: &mut [Square]) -> i32 {
+    let len = cells.len();
+
     for idx in 0..len {
-        if sudoku[idx].solvable == 1 {
-            let (row, col) = {
-                let cell = &mut sudoku[idx];
+        if cells[idx].solvable == 1 && cells[idx].val == 0 {
+            {
+                let cell = &mut cells[idx];
                 solve_cell(cell);
-                (cell.row, cell.col)
-            };
-            update_sudoku(sudoku, row, col);
+            }
+            let row = cells[idx].row;
+            let col = cells[idx].col;
+            let changed = update_sudoku(cells, row, col);
+            update_squares(&mut squares, &cells, &changed);
         }
     }
     1

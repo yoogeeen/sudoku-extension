@@ -1,6 +1,7 @@
 use std::sync::atomic::{Ordering};
 use crate::UNSOLVED;
 
+#[derive(Clone)]
 pub struct Cell {
     pub val: i32,
     /*
@@ -16,11 +17,24 @@ pub struct Cell {
 }
 
 pub fn solve_cell(cell: &mut Cell) {
-    for i in cell.possible {
-        if i == 0 {
-            cell.val = i + 1;
-            cell.solvable = 0;
-            UNSOLVED.fetch_sub(1, Ordering::Relaxed);
+    if cell.val != 0 { return; }
+
+    let mut found: Option<usize> = None;
+    for (i, &p) in cell.possible.iter().enumerate() {
+        if p == 1 {
+            if found.is_some() {
+                // more than one candidate; can't solve here
+                found = None;
+                break;
+            } else {
+                found = Some(i);
+            }
         }
+    }
+
+    if let Some(k) = found {
+        cell.val = (k + 1) as i32;
+        cell.solvable = 0;
+        UNSOLVED.fetch_sub(1, Ordering::Relaxed);
     }
 }
