@@ -21,12 +21,14 @@ fn main() {
 
     while UNSOLVED.load(Ordering::Relaxed) > 0 {
         let progress = check_puzzle(&mut sudoku);
-        if progress == 0 {
-            println!("Failed to solve");
+        if !progress {
             break;
         }
     }
-
-    println!("Finished");
+    if UNSOLVED.load(Ordering::Relaxed) > 0 {
+        println!("Failed to solve :(");
+    } else {
+        println!("Solved :)");
+    }
     puzzle::print_puzzle(&sudoku.cells);
 }

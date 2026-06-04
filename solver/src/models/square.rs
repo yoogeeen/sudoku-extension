@@ -6,7 +6,6 @@ pub struct Square {
     vals: i32,
     possible: [i32; 9],
     solvable: i32,
-    next: Option<Box<Square>>,
 }
 
 pub fn create_squares() -> Vec<Square> {
@@ -17,7 +16,6 @@ pub fn create_squares() -> Vec<Square> {
             vals: 0,
             solvable: SIZE_ROWS_COLS as i32,
             possible: [1; SIZE_ROWS_COLS],
-            next: None,
         };
         squares.push(square);
     }
@@ -62,7 +60,7 @@ pub fn update_squares(squares: &mut [Square], cells: &Vec<Cell>, changed: &[usiz
     }
 }
 
-pub fn single_candidates(sudoku: &mut Sudoku) -> i32 {
+pub fn single_candidates(sudoku: &mut Sudoku) -> bool {
  let mut assignments: Vec<(usize, i32)> = Vec::new();
 
     // scan each square
@@ -102,9 +100,9 @@ pub fn single_candidates(sudoku: &mut Sudoku) -> i32 {
             let col = sudoku.cells[cell_idx].col;
             let changed = update_sudoku(&mut sudoku.cells, row, col);
             update_squares(&mut sudoku.squares, &sudoku.cells, &changed);
-            return 1;
+            return true;
         }
     }
 
-    0
+    false
 }
