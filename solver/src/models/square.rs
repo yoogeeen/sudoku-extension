@@ -1,11 +1,10 @@
-use std::sync::atomic::Ordering;
+use crate::{SIZE_ROWS_COLS, models::Cell};
 
-use crate::{SIZE_ROWS_COLS, UNSOLVED, models::{Cell, sudoku::Sudoku}, puzzle::update_sudoku};
 pub struct Square {
-    cell_idx: Vec<usize>,
-    vals: i32,
-    possible: [i32; 9],
-    solvable: i32,
+    pub cell_idx: Vec<usize>,
+    pub vals: i32,
+    pub possible: [i32; 9],
+    pub solvable: i32,
 }
 
 pub fn create_squares() -> Vec<Square> {
@@ -58,51 +57,4 @@ pub fn update_squares(squares: &mut [Square], cells: &Vec<Cell>, changed: &[usiz
         // recompute solvable aggregate (sum of cell.solvable)
         sq.solvable = sq.cell_idx.iter().map(|&ci| cells[ci].solvable).sum();
     }
-}
-
-pub fn single_candidates(sudoku: &mut Sudoku) -> bool {
- let mut assignments: Vec<(usize, i32)> = Vec::new();
-
-    // scan each square
-    for sq_idx in 0..sudoku.squares.len() {
-        // clone idx to prevent borrowing conflicts
-        let idx = sudoku.squares[sq_idx].cell_idx.clone();
-
-        // loop through possible digits
-        for digit in 0..SIZE_ROWS_COLS {
-            let mut count = 0usize;
-            let mut last_idx = 0usize;
-
-            for &cell_idx in &idx {
-                if sudoku.cells[cell_idx].val != 0 { continue; }
-                if sudoku.cells[cell_idx].possible[digit] == 1 {
-                    count += 1;
-                    last_idx = cell_idx;
-                    if count > 1 { break; }
-                }
-            }
-
-            if count == 1 {
-                // record assignment, set cell last_idx to digit+1
-                assignments.push((last_idx, (digit + 1) as i32));
-            }
-        }
-    }
-
-    // apply assignments and update sudoku
-    for (cell_idx, val) in assignments {
-        if sudoku.cells[cell_idx].val == 0 {
-            sudoku.cells[cell_idx].val = val;
-            UNSOLVED.fetch_sub(1, Ordering::Relaxed);
-            sudoku.cells[cell_idx].solvable = 0;
-
-            let row = sudoku.cells[cell_idx].row;
-            let col = sudoku.cells[cell_idx].col;
-            let changed = update_sudoku(&mut sudoku.cells, row, col);
-            update_squares(&mut sudoku.squares, &sudoku.cells, &changed);
-            return true;
-        }
-    }
-
-    false
 }
