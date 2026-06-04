@@ -9,36 +9,30 @@ use std::sync::atomic::Ordering;
 pub fn create_puzzle() -> [[i32; SIZE_ROWS_COLS]; SIZE_ROWS_COLS] {
     let mut puzzle: [[i32; SIZE_ROWS_COLS]; SIZE_ROWS_COLS] = [[0; SIZE_ROWS_COLS]; SIZE_ROWS_COLS];
     for &(row, col, val) in &[
-        (0, 1, 1),
-        (0, 2, 9),
-        (0, 5, 2),
-        (1, 0, 4),
-        (1, 1, 7),
-        (1, 3, 6),
-        (1, 4, 9),
-        (1, 8, 1),
-        (2, 3, 4),
-        (2, 7, 9),
+        (0, 6, 9),
+        (0, 8, 7),
+        (1, 0, 6),
+        (1, 2, 2),
+        (1, 6, 8),
+        (2, 7, 3),
         (3, 0, 8),
-        (3, 1, 9),
-        (3, 2, 4),
-        (3, 3, 5),
-        (3, 5, 7),
-        (5, 3, 2),
-        (5, 5, 1),
-        (5, 6, 9),
-        (5, 7, 5),
-        (5, 8, 8),
-        (6, 1, 5),
-        (6, 5, 6),
-        (7, 0, 6),
-        (7, 4, 2),
-        (7, 5, 8),
-        (7, 7, 7),
-        (7, 8, 9),
-        (8, 3, 1),
-        (8, 6, 8),
-        (8, 7, 6),
+        (3, 2, 1),
+        (3, 3, 4),
+        (3, 4, 2),
+        (4, 4, 8),
+        (4, 6, 7),
+        (5, 0, 7),
+        (5, 4, 5),
+        (5, 6, 2),
+        (6, 1, 3),
+        (6, 7, 7),
+        (7, 1, 6),
+        (7, 3, 5),
+        (7, 7, 2),
+        (7, 8, 1),
+        (8, 2, 8),
+        (8, 4, 4),
+        (8, 5, 3),
     ] {
         puzzle[row][col] = val;
         UNSOLVED.fetch_sub(1, Ordering::Relaxed);
@@ -163,7 +157,12 @@ pub fn check_puzzle(sudoku: &mut Sudoku) -> bool {
     if single_candidates(sudoku) {
         return true;
     }
-    scan_row(sudoku)
+
+    if scan_row(sudoku) {
+        return true;
+    }
+
+    scan_col(sudoku)
 }
 
 pub fn scan_row(sudoku: &mut Sudoku) -> bool {
@@ -186,6 +185,47 @@ pub fn scan_row(sudoku: &mut Sudoku) -> bool {
         for k in 0..SIZE_ROWS_COLS {
             if sum[k] == 1 {
                 let col = place[k];
+                let idx = row * SIZE_ROWS_COLS + col;
+                if sudoku.cells[idx].val == 0 {
+                    sudoku.cells[idx].val = (k + 1) as i32;
+                    sudoku.cells[idx].solvable = 0;
+                    UNSOLVED.fetch_sub(1, Ordering::Relaxed);
+
+                    let changed = update_sudoku(&mut sudoku.cells, row, col);
+                    update_squares(&mut sudoku.squares, &sudoku.cells, &changed);
+                    return true;
+                }
+            }
+        }
+    }
+
+    if single_candidates(sudoku) {
+        return true;
+    }
+
+    false
+}
+
+pub fn scan_col(sudoku: &mut Sudoku) -> bool {
+    // For each column, count how many cells can take each digit.
+    for col in 0..SIZE_ROWS_COLS {
+        let mut sum = [0i32; SIZE_ROWS_COLS];
+        let mut place = [0usize; SIZE_ROWS_COLS];
+
+        for row in 0..SIZE_ROWS_COLS {
+            let idx = row * SIZE_ROWS_COLS + col;
+            if sudoku.cells[idx].val != 0 { continue; }
+            for k in 0..SIZE_ROWS_COLS {
+                if sudoku.cells[idx].possible[k] == 1 {
+                    sum[k] += 1;
+                    place[k] = row;
+                }
+            }
+        }
+
+        for k in 0..SIZE_ROWS_COLS {
+            if sum[k] == 1 {
+                let row = place[k];
                 let idx = row * SIZE_ROWS_COLS + col;
                 if sudoku.cells[idx].val == 0 {
                     sudoku.cells[idx].val = (k + 1) as i32;
