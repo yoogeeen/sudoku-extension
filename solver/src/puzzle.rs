@@ -8,7 +8,7 @@ use crate::{
         solve_cell, 
         square::{create_squares, populate_squares, update_squares}, 
         sudoku::{Sudoku, create_sudoku}}, 
-        solving_algos::{scan_hidden_singles, scan_naked_pairs},
+        solving_algos::{scan_box_line_reduction, scan_hidden_singles, scan_naked_pairs},
 };
 
 use std::sync::atomic::Ordering;
@@ -163,5 +163,7 @@ pub fn check_puzzle(sudoku: &mut Sudoku) -> bool {
 
     if scan_hidden_singles(sudoku) { return true; }
 
-    scan_naked_pairs(sudoku)
+    if scan_naked_pairs(sudoku) { return true; }
+
+    scan_box_line_reduction(sudoku)
 }

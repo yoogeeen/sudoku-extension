@@ -120,3 +120,56 @@ pub fn scan_naked_pairs(sudoku: &mut Sudoku) -> bool {
     }
     false
 }
+
+pub fn scan_box_line_reduction(sudoku: &mut Sudoku) -> bool {
+    for b in 0..sudoku.squares.len() {
+        let unit = &sudoku.squares[b].cell_idx;
+        for digit in 0..SIZE_ROWS_COLS {
+            // gather candidate positions inside the box
+            let pos: Vec<usize> = unit.iter()
+                .copied()
+                .filter(|&ci| sudoku.cells[ci].val == 0 && sudoku.cells[ci].possible[digit] == 1)
+                .collect();
+            if pos.is_empty() { continue; }
+
+            // all in same row?
+            let row0 = sudoku.cells[pos[0]].row;
+            if pos.iter().all(|&ci| sudoku.cells[ci].row == row0) {
+                let mut changed: Vec<usize> = Vec::new();
+                for c in 0..SIZE_ROWS_COLS {
+                    let idx = row0 * SIZE_ROWS_COLS + c;
+                    if sudoku.cells[idx].box_index == b { continue; } // skip same box
+                    if sudoku.cells[idx].val == 0 && sudoku.cells[idx].possible[digit] == 1 {
+                        sudoku.cells[idx].possible[digit] = 0;
+                        sudoku.cells[idx].solvable -= 1;
+                        changed.push(idx);
+                    }
+                }
+                if !changed.is_empty() {
+                    update_squares(&mut sudoku.squares, &sudoku.cells, &changed);
+                    return true;
+                }
+            }
+
+            // all in same column?
+            let col0 = sudoku.cells[pos[0]].col;
+            if pos.iter().all(|&ci| sudoku.cells[ci].col == col0) {
+                let mut changed: Vec<usize> = Vec::new();
+                for r in 0..SIZE_ROWS_COLS {
+                    let idx = r * SIZE_ROWS_COLS + col0;
+                    if sudoku.cells[idx].box_index == b { continue; }
+                    if sudoku.cells[idx].val == 0 && sudoku.cells[idx].possible[digit] == 1 {
+                        sudoku.cells[idx].possible[digit] = 0;
+                        sudoku.cells[idx].solvable -= 1;
+                        changed.push(idx);
+                    }
+                }
+                if !changed.is_empty() {
+                    update_squares(&mut sudoku.squares, &sudoku.cells, &changed);
+                    return true;
+                }
+            }
+        }
+    }
+    false
+}
